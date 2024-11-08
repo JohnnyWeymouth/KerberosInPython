@@ -5,5 +5,5 @@ class ServiceServer(NamedTuple):
     services: set[str]
 
 class ResponseOfServiceServer(NamedTuple):
-    encrypted_access_to_service: bytes
+    encrypted_one_time_access_to_service: bytes
     encrypted_timestamp: bytes
