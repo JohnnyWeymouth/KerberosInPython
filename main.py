@@ -1,45 +1,65 @@
-import os
-
-from symmetric import encrypt_message, decrypt_message
-from Client import Client, RequestToAuthenticationServer, RequestToTicketGrantingServer, RequestToServiceServer
+from symmetric import generate_aes_key, encrypt_message, decrypt_message
+from initial_infrastructure import create_infrastructure
+from Client import RequestToAuthenticationServer, RequestToTicketGrantingServer, RequestToServiceServer
 from AuthenticationServer import AuthenticationServer, ResponseOfAuthServer
 from TicketGrantingServer import TicketGrantingServer, ResponseOfTicketGrantingServer
 from ServiceServer import ServiceServer, ResponseOfServiceServer
 
-def create_infrastructure() -> tuple[Client, AuthenticationServer, TicketGrantingServer, ServiceServer]:
-    # Create the clients
-    client1 = Client('Advanced_Networking_Student1', '10.10.10.10', os.urandom(32))
-    client2 = Client('Advanced_Networking_Student2', '10.10.10.11', os.urandom(32))
-    client3 = Client('Advanced_Networking_Student3', '10.10.10.12', os.urandom(32))
-
-    # Create the Authentication Server
-    client_id_to_key_C = {
-        client1.client_id: client1.client_key,
-        client2.client_id: client2.client_key,
-        client3.client_id: client3.client_key,
-    }
-    key_TGS = os.urandom(32)
-    authentication_server = AuthenticationServer(client_id_to_key_C, key_TGS)
-    
-    # Create the Ticket Granting Server
-    minecraft, wholesome_memes, clone_wars = 'Minecraft', 'Wholesome Memes', 'Star Wars the Clone Wars'
-    clients_id_to_authorized_services = {
-        client1.client_id: {minecraft, wholesome_memes},
-        client2.client_id: {minecraft, clone_wars},
-        client3.client_id: {minecraft},
-    }
-    key_S = os.urandom(32)
-    ticket_granting_server = TicketGrantingServer(clients_id_to_authorized_services, key_TGS, key_S)
-
-    # Create the Service Server
-    services = {minecraft, wholesome_memes, clone_wars}
-    service_server = ServiceServer(key_S, services)
-    return client1, authentication_server, ticket_granting_server, service_server
-
 def main():
-    client, authentication_server, ticket_granting_server, service_server = create_infrastructure()
-    print(client.client_id)
+    # This creates the different parts of the infrastructure.
+    client1, authentication_server, ticket_granting_server, service_server = create_infrastructure()
+    # TODO Just take a look at this function to see how preshared keys work, along with the permissions.
+    # Your job this lab will be to have client1 get access to Minecraft from the Service server
 
+    # Communicate with the authentication server
+    request = RequestToAuthenticationServer(client1.client_id, client1.ip_address)
+    response = authentication_server_logic(request, authentication_server)
+    next_conversation_key = decrypt_message(
+        client1.client_key,
+        response.iv_next_conversation,
+        response.encrypted_key_for_next_conversation
+    )
+
+    tgt_key_as_string = decrypt_message(authentication_server.key_TGS, response.iv_next_conversation, response.encrypted_ticket_granting_ticket)
+    print(tgt_key_as_string)
+    
+    # Communicate with the ticket_granting_ticket_server
+
+def authentication_server_logic(request:RequestToAuthenticationServer, server:AuthenticationServer) -> ResponseOfAuthServer:
+    # Generate the key for the next communication
+    next_communication_key = generate_aes_key()
+
+    # Unpack client and address
+    client = request.client_id
+    address = request.ip_address
+
+    # Checks that the client's id is one of the ids that maps to a key on the Authentication Server.
+    # If not there, create a random key for the imposter
+    client_key = server.client_id_to_key_C.get(request.client_id)
+    validity = True
+    if client_key is None:
+        client_key = generate_aes_key()
+        validity = False
+
+    # Create and encrypt the ticket granting ticket
+    ticket_granting_ticket_as_string = str((
+        next_communication_key,
+        client,
+        address,
+        validity
+    )).encode('utf-8')
+    iv_tgt, encrypted_ticket_granting_ticket = encrypt_message(server.key_TGS, ticket_granting_ticket_as_string)
+
+    # Encrypt the next_communication_key for the client to use
+    iv_next_conversation, encrypted_key_for_next_conversation = encrypt_message(client_key, next_communication_key)
+    
+    # Return the message
+    return ResponseOfAuthServer(
+        iv_tgt,
+        encrypted_ticket_granting_ticket,
+        iv_next_conversation,
+        encrypted_key_for_next_conversation
+    )
 
 if __name__ == '__main__':
     main()

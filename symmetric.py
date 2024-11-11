@@ -3,6 +3,18 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 import os
 
+def generate_aes_key() -> bytes:
+    """
+    Generates a random AES key.
+
+    Args:
+        key_size (int): The size of the AES key in bytes. Default is 32 bytes for AES-256.
+
+    Returns:
+        bytes: The generated AES key.
+    """
+    return os.urandom(32)
+
 def encrypt_message(key:bytes, plaintext:bytes) -> tuple[bytes, bytes]:
     """
     Encrypts a message using AES encryption with a random IV.
