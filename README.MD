@@ -28,7 +28,7 @@ Students should learn:
 ![My Local Image](/images/guide.png)
 The code up to and including the authentication server is provided for you.
 For reference, an authenticator, not to be confused with the authentication server, is any message in Kerberos that is encrypted AND not a ticket. This shouldn't be necessary to complete the code, but many videos talk about this, and it can be confusing.
-Additionally, the encyption and decryption functions have been abstracted away. This will make your job much easier.
+Additionally, the encyption and decryption functions have been abstracted away. This will make your job much easier. Use the uuid4 function to generate a "one time access code" when writing the service server logic.
 Finally, type hinting is used to lead students in the right direction. Models of these classes have been written for you to use.
 
 3. Once you have finished the code:
