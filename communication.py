@@ -15,7 +15,7 @@ class TicketGrantingTicket(NamedTuple):
 
 class ResponseOfAuthenticationServer(NamedTuple):
     encrypted_ticket_granting_ticket: bytes
-    encrypted_key_for_next_conversation: bytes
+    encrypted_key_for_next_communication: bytes
 
 class RequestToTicketGrantingServer(NamedTuple):
     requested_service: str
@@ -27,10 +27,11 @@ class ServiceTicket(NamedTuple):
     client: str
     address: str
     validity: bool
+    service: str
 
 class ResponseOfTicketGrantingServer(NamedTuple):
     encrypted_service_ticket: bytes
-    encrypted_key_for_next_conversation: bytes
+    encrypted_key_for_next_communication: bytes
 
 class RequestToServiceServer(NamedTuple):
     encrypted_service_ticket: bytes
