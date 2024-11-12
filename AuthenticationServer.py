@@ -5,7 +5,5 @@ class AuthenticationServer(NamedTuple):
     key_TGS: bytes
 
 class ResponseOfAuthServer(NamedTuple):
-    iv_tgt: bytes
     encrypted_ticket_granting_ticket: bytes
-    iv_next_conversation: bytes
     encrypted_key_for_next_conversation: bytes
