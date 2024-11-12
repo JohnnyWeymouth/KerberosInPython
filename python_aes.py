@@ -12,21 +12,21 @@ def generate_aes_key() -> bytes:
     """
     return os.urandom(32)
 
-def encrypt_object(data: tuple, key: bytes) -> bytes:
+def encrypt_object(data: object, key: bytes) -> bytes:
     """
-    Encrypts a tuple using AES-256 CBC mode and includes the IV in the result.
+    Encrypts a python object using AES-256 CBC mode and includes the IV in the result.
     
     Args:
-        data (tuple): The tuple to encrypt.
-        key (bytes): The AES key (32 bytes for AES-256).
+        data (object): The object to encrypt
+        key (bytes): The AES key (32 bytes for AES-256)
     
     Returns:
-        bytes: The IV prepended to the encrypted data.
+        bytes: The IV prepended to the encrypted data
     """
     # Generate a random IV
     iv = os.urandom(16)
 
-    # Serialize the tuple using pickle
+    # Serialize the object using pickle
     data_bytes = pickle.dumps(data)
     
     # Create AES-256 cipher in CBC mode
@@ -43,16 +43,16 @@ def encrypt_object(data: tuple, key: bytes) -> bytes:
     # Prepend the IV to the encrypted data
     return iv + encrypted_data
 
-def decrypt_object(encrypted_data: bytes, key: bytes) -> tuple:
+def decrypt_object(encrypted_data: bytes, key: bytes) -> object:
     """
-    Decrypts AES-256 encrypted data with an IV prepended to it, back into a tuple.
+    Decrypts AES-256 encrypted data with an IV prepended to it, back into the original python object.
     
     Args:
         encrypted_data (bytes): The IV prepended to the encrypted data.
         key (bytes): The AES key (32 bytes for AES-256).
     
     Returns:
-        tuple: The original tuple after decryption.
+        object: The original python object after decryption.
     """
     # Extract the IV from the beginning of the encrypted data
     iv = encrypted_data[:16]
@@ -69,6 +69,6 @@ def decrypt_object(encrypted_data: bytes, key: bytes) -> tuple:
     pad_length = decrypted_data[-1]
     decrypted_data = decrypted_data[:-pad_length]
     
-    # Deserialize the data back into a tuple
+    # Deserialize the data back into the original python object
     deserialized_data = pickle.loads(decrypted_data)
     return deserialized_data
